@@ -16,6 +16,8 @@ gem "sinatra-contrib", require: ["sinatra/namespace", "sinatra/reloader"]
 gem "sinatra-router"
 gem "dotenv"
 
+gem "httparty"
+
 group :development do
   gem "sequel-rake"
 end
