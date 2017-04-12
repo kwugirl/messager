@@ -26,5 +26,14 @@ describe HerokuAPIClient do
 
       expect(HerokuAPIClient.admin_emails_for('invalid_org')).to eql([])
     end
+
+    it "always returns an Enumerable" do
+      response = double
+      allow(response).to receive(:code).and_return(999)
+
+      allow(HTTParty).to receive(:get).and_return(response)
+
+      expect(HerokuAPIClient.admin_emails_for('invalid_org')).to eql([])
+    end
   end
 end
