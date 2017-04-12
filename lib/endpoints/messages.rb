@@ -9,21 +9,7 @@ module Endpoints
           halt 403
         end
 
-        recipient = params['recipient']
-        if recipient
-          org = recipient.gsub(/@.+$/, "")
-          admin_emails = HerokuAPIClient.admin_emails_for(org)
-
-          message = {
-            from: params['from'],
-            to: admin_emails.join(','),
-            subject: "[#{org}] #{params['subject']}",
-            text: params['body-plain'],
-            html: params['body-html']
-          }
-          forward_message(message)
-        end
-
+        forward_message(params)
         status 201
       end
     end
@@ -35,15 +21,34 @@ module Endpoints
       signature == OpenSSL::HMAC.hexdigest(digest, api_key, data)
     end
 
-    def forward_message(message)
-      endpoint = "https://api.mailgun.net/v3/premiumrush-starter.herokai.com/messages"
+    def forward_message(params)
+      message = construct_message(params)
 
+      endpoint = "https://api.mailgun.net/v3/premiumrush-starter.herokai.com/messages"
       credentials = {
         username: 'api',
         password: ENV['MAILGUN_API_KEY']
       }
 
       HTTParty.post(endpoint, basic_auth: credentials, body: message)
+    end
+
+    def construct_message(params)
+      # early return if don't have the minimum params expected?
+
+      recipient = params['recipient']
+      return unless recipient
+
+      org = recipient.gsub(/@.+$/, "")
+      admin_emails = HerokuAPIClient.admin_emails_for(org)
+
+      {
+        from: params['from'],
+        to: admin_emails.join(','),
+        subject: "[#{org}] #{params['subject']}",
+        text: params['body-plain'],
+        html: params['body-html']
+      }
     end
   end
 end

@@ -23,7 +23,7 @@ describe Endpoints::Messages do
     end
 
     it "with a message recipient then calls HerokuAPIClient" do
-      expect(HerokuAPIClient).to receive(:admin_emails_for).with('some_org')
+      expect(HerokuAPIClient).to receive(:admin_emails_for).with('some_org').and_return([])
 
       allow_any_instance_of(app).to receive(:verify_from_mailgun).and_return(true)
       post "/messages", {'recipient': 'some_org@example.com'}
