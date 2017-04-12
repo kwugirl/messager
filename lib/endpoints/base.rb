@@ -10,6 +10,10 @@ module Endpoints
       register Sinatra::Reloader
     end
 
+    configure :production, :development do
+      enable :logging
+    end
+
     not_found do
       content_type :json
       status 404

@@ -7,12 +7,18 @@ class HerokuAPIClient
       case response.code
       when 200
         members = JSON.parse(response.body)
-        members.map{ |member| member["email"] if member["role"] == "admin" }.compact
+
+        admin_emails = members.map do |member|
+          member["email"] if member["role"] == "admin"
+        end.compact
+        puts "WARN: No admins amongst #{org_name} members" if admin_emails.empty?
+
+        admin_emails
       when 404
-        # invalid org, do some logging
+        puts "WARN: Could not retrieve members for the org #{org_name}, likely invalid org"
         []
       else
-        # do some logging
+        puts "WARN: Couldn't get members, got response code #{response.code} but maybe should retry?"
         []
       end
     end

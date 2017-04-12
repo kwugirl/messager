@@ -42,11 +42,14 @@ describe Endpoints::Messages do
 
       it "calls Mailgun messages API" do
         allow(HerokuAPIClient).to receive(:admin_emails_for).and_return(['admin@example.com'])
+        response = double
+        allow(response).to receive(:code).and_return(200)
 
         message_partial = {to: 'admin@example.com'}
         expect(HTTParty).to receive(:post).with(app::MAILGUN_MESSAGES_ENDPOINT,
                                                 basic_auth: app::MAILGUN_API_CREDENTIALS,
                                                 body: hash_including(message_partial))
+                                          .and_return(response)
 
         post "/messages", @params
       end
@@ -54,21 +57,22 @@ describe Endpoints::Messages do
       it "joins multiple admin emails with commas" do
         multiple_admins = ['admin1', 'admin2', 'admin3']
         allow(HerokuAPIClient).to receive(:admin_emails_for).and_return(multiple_admins)
+        response = double
+        allow(response).to receive(:code).and_return(200)
 
         message_partial = {to: 'admin1,admin2,admin3'}
         expect(HTTParty).to receive(:post).with(app::MAILGUN_MESSAGES_ENDPOINT,
                                                 basic_auth: app::MAILGUN_API_CREDENTIALS,
                                                 body: hash_including(message_partial))
+                                          .and_return(response)
 
         post "/messages", @params
       end
 
-      it "handles empty list of admin emails" do
+      it "doesn't try to forward message with no admin emails" do
         allow(HerokuAPIClient).to receive(:admin_emails_for).and_return([])
 
-        expect(HTTParty).to receive(:post).with(app::MAILGUN_MESSAGES_ENDPOINT,
-                                                basic_auth: app::MAILGUN_API_CREDENTIALS,
-                                                body: anything)
+        expect(HTTParty).to_not receive(:post)
 
         post "/messages", @params
       end

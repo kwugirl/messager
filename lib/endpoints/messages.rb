@@ -6,6 +6,7 @@ module Endpoints
       # https://documentation.mailgun.com/user_manual.html#webhooks
       post do
         unless verify_from_mailgun(params['token'], params['timestamp'], params['signature'])
+          logger.debug "Failed verification from mailgun"
           halt 403
         end
 
@@ -30,12 +31,22 @@ module Endpoints
     def forward_message(params)
       message = construct_message(params)
 
-      HTTParty.post(MAILGUN_MESSAGES_ENDPOINT, basic_auth: MAILGUN_API_CREDENTIALS, body: message)
+      if message[:to] && !message[:to].empty?
+        response = HTTParty.post(MAILGUN_MESSAGES_ENDPOINT, basic_auth: MAILGUN_API_CREDENTIALS, body: message)
+        case response.code
+        when 200
+          logger.info "Successfully forwarded message from #{message[:from]} to #{message[:to]}"
+          logger.info "Successfully forwarded message with subject #{message[:subject]}"
+        else
+          # some logging/error handling
+          # figure out minimum required fields for posting a new message
+        end
+      end
     end
 
     def construct_message(params)
       # TODO: early return after verifying set of minimum needed params
-      return unless params['recipient']
+      return {} unless params['recipient']
 
       org = extract_org_name(params['recipient'], params['domain'])
       admin_emails = HerokuAPIClient.admin_emails_for(org)
