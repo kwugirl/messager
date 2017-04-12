@@ -12,8 +12,15 @@ describe Endpoints::Messages do
   end
 
   describe "POST /messages" do
-    it "succeeds" do
+    it "fails if not from Mailgun" do
       post "/messages", MultiJson.encode({})
+      expect(last_response.status).to eql(403)
+    end
+
+    it "succeeds if verified from Mailgun" do
+      expect_any_instance_of(Endpoints::Messages).to receive(:verify_from_mailgun).and_return(true)
+      post "/messages", MultiJson.encode({})
+
       expect(last_response.status).to eql(201)
     end
   end
