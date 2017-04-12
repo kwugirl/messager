@@ -9,7 +9,9 @@ describe Endpoints::Messages do
 
   describe "POST /messages" do
     it "fails if not from Mailgun" do
+      expect_any_instance_of(app).to receive(:verify_from_mailgun).and_return(false)
       post "/messages"
+
       expect(last_response.status).to eql(403)
     end
 

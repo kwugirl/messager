@@ -5,7 +5,9 @@ module Endpoints
       # message using their Webhooks:
       # https://documentation.mailgun.com/user_manual.html#webhooks
       post do
-        verify_from_mailgun(params['token'], params['timestamp'], params['signature'])
+        unless verify_from_mailgun(params['token'], params['timestamp'], params['signature'])
+          halt 403
+        end
 
         recipient = params['recipient']
         if recipient
@@ -30,7 +32,7 @@ module Endpoints
       api_key = ENV['MAILGUN_API_KEY']
       digest = OpenSSL::Digest::SHA256.new
       data = [timestamp, token].join
-      halt 403 unless signature == OpenSSL::HMAC.hexdigest(digest, api_key, data)
+      signature == OpenSSL::HMAC.hexdigest(digest, api_key, data)
     end
 
     def forward_message(message)
