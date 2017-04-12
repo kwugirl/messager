@@ -6,15 +6,18 @@ module Endpoints
       # https://documentation.mailgun.com/user_manual.html#webhooks
       post do
         unless verify_from_mailgun(params['token'], params['timestamp'], params['signature'])
-          logger.debug "Failed verification from mailgun"
+          puts "Failed verification from mailgun"
+          # logger.debug "Failed verification from mailgun"
           halt 403
         end
         if sender_domain_blacklisted?(params['domain'])
-          logger.debug "Sender domain #{params['domain']} is blacklisted"
+          puts "Sender domain #{params['domain']} is blacklisted"
+          # logger.debug "Sender domain #{params['domain']} is blacklisted"
           halt 403
         end
         if subject_blacklisted?(params['subject'])
-          logger.debug "Subject #{params['subject']} is blacklisted"
+          puts "Subject #{params['subject']} is blacklisted"
+          # logger.debug "Subject #{params['subject']} is blacklisted"
           halt 403
         end
 
@@ -53,8 +56,10 @@ module Endpoints
         response = HTTParty.post(MAILGUN_MESSAGES_ENDPOINT, basic_auth: MAILGUN_API_CREDENTIALS, body: message)
         case response.code
         when 200
-          logger.info "Successfully forwarded message from #{message[:from]} to #{message[:to]}"
-          logger.info "Successfully forwarded message with subject #{message[:subject]}"
+          puts "Successfully forwarded message from #{message[:from]} to #{message[:to]}"
+          puts "Successfully forwarded message with subject #{message[:subject]}"
+          # logger.info "Successfully forwarded message from #{message[:from]} to #{message[:to]}"
+          # logger.info "Successfully forwarded message with subject #{message[:subject]}"
         else
           # some logging/error handling
           # figure out minimum required fields for posting a new message
