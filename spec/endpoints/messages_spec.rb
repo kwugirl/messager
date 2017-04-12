@@ -8,25 +8,36 @@ describe Endpoints::Messages do
   end
 
   describe "POST /messages" do
-    it "fails if not from Mailgun" do
-      expect_any_instance_of(app).to receive(:verify_from_mailgun).and_return(false)
-      post "/messages"
+    describe "verifies came from Mailgun" do
+      it "fails if not from Mailgun" do
+        expect_any_instance_of(app).to receive(:verify_from_mailgun).and_return(false)
+        post "/messages"
 
-      expect(last_response.status).to eql(403)
+        expect(last_response.status).to eql(403)
+      end
+
+      it "succeeds if verified from Mailgun" do
+        expect_any_instance_of(app).to receive(:verify_from_mailgun).and_return(true)
+        post "/messages"
+
+        expect(last_response.status).to eql(201)
+      end
     end
 
-    it "succeeds if verified from Mailgun" do
-      expect_any_instance_of(app).to receive(:verify_from_mailgun).and_return(true)
-      post "/messages"
+    describe "forwards message" do
+      before do
+        allow_any_instance_of(app).to receive(:verify_from_mailgun).and_return(true)
+      end
 
-      expect(last_response.status).to eql(201)
-    end
+      it "extracts org name from message recipient address" do
+        expect(HerokuAPIClient).to receive(:admin_emails_for).with('some_org').and_return([])
 
-    it "with a message recipient then calls HerokuAPIClient" do
-      expect(HerokuAPIClient).to receive(:admin_emails_for).with('some_org').and_return([])
-
-      allow_any_instance_of(app).to receive(:verify_from_mailgun).and_return(true)
-      post "/messages", {'recipient': 'some_org@example.com'}
+        params = {
+          'recipient': 'some_org@example.com',
+          'domain': 'example.com'
+        }
+        post "/messages", params
+      end
     end
   end
 end

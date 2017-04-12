@@ -34,12 +34,10 @@ module Endpoints
     end
 
     def construct_message(params)
-      # early return if don't have the minimum params expected?
+      # TODO: early return after verifying set of minimum needed params
+      return unless params['recipient']
 
-      recipient = params['recipient']
-      return unless recipient
-
-      org = recipient.gsub(/@.+$/, "")
+      org = extract_org_name(params['recipient'], params['domain'])
       admin_emails = HerokuAPIClient.admin_emails_for(org)
 
       {
@@ -49,6 +47,10 @@ module Endpoints
         text: params['body-plain'],
         html: params['body-html']
       }
+    end
+
+    def extract_org_name(recipient, domain)
+      recipient.gsub(/@#{domain}$/, "")
     end
   end
 end
