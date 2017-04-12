@@ -9,6 +9,14 @@ module Endpoints
           logger.debug "Failed verification from mailgun"
           halt 403
         end
+        if sender_domain_blacklisted?(params['domain'])
+          logger.debug "Sender domain #{params['domain']} is blacklisted"
+          halt 403
+        end
+        if subject_blacklisted?(params['subject'])
+          logger.debug "Subject #{params['subject']} is blacklisted"
+          halt 403
+        end
 
         forward_message(params)
         status 201
@@ -20,6 +28,16 @@ module Endpoints
       digest = OpenSSL::Digest::SHA256.new
       data = [timestamp, token].join
       signature == OpenSSL::HMAC.hexdigest(digest, api_key, data)
+    end
+
+    SENDER_DOMAIN_BLACKLIST = ['blacksheep.com']
+    def sender_domain_blacklisted?(domain)
+      SENDER_DOMAIN_BLACKLIST.include?(domain)
+    end
+
+    SUBJECT_BLACKLIST = ['nope']
+    def subject_blacklisted?(subject)
+      SUBJECT_BLACKLIST.include?(subject)
     end
 
     MAILGUN_MESSAGES_ENDPOINT = "https://api.mailgun.net/v3/premiumrush-starter.herokai.com/messages"

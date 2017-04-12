@@ -24,6 +24,24 @@ describe Endpoints::Messages do
       end
     end
 
+    describe "checks against blacklists" do
+      before do
+        allow_any_instance_of(app).to receive(:verify_from_mailgun).and_return(true)
+      end
+
+      it "for sender domain" do
+        post "/messages", {'domain': 'blacksheep.com'}
+
+        expect(last_response.status).to eql(403)
+      end
+
+      it "for message subject" do
+        post "/messages", {'subject': 'nope'}
+
+        expect(last_response.status).to eql(403)
+      end
+    end
+
     describe "forwards message" do
       before do
         allow_any_instance_of(app).to receive(:verify_from_mailgun).and_return(true)
