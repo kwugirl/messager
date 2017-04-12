@@ -21,16 +21,16 @@ module Endpoints
       signature == OpenSSL::HMAC.hexdigest(digest, api_key, data)
     end
 
+    MAILGUN_MESSAGES_ENDPOINT = "https://api.mailgun.net/v3/premiumrush-starter.herokai.com/messages"
+    MAILGUN_API_CREDENTIALS = {
+      username: 'api',
+      password: ENV['MAILGUN_API_KEY']
+    }
+
     def forward_message(params)
       message = construct_message(params)
 
-      endpoint = "https://api.mailgun.net/v3/premiumrush-starter.herokai.com/messages"
-      credentials = {
-        username: 'api',
-        password: ENV['MAILGUN_API_KEY']
-      }
-
-      HTTParty.post(endpoint, basic_auth: credentials, body: message)
+      HTTParty.post(MAILGUN_MESSAGES_ENDPOINT, basic_auth: MAILGUN_API_CREDENTIALS, body: message)
     end
 
     def construct_message(params)
