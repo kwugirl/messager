@@ -7,6 +7,13 @@ module Endpoints
       post do
         verify_from_mailgun(params['token'], params['timestamp'], params['signature'])
 
+        recipient = params['recipient']
+        if recipient
+          org = recipient.gsub(/@.+$/, "")
+          admin_emails = HerokuAPIClient.admin_emails_for(org)
+          # tell Mailgun to forward message to this list of admin_emails
+        end
+
         status 201
       end
     end
